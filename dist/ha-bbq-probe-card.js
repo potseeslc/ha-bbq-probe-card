@@ -62,11 +62,31 @@ class HaBbqProbeCard extends HTMLElement {
     return `${Math.round(value)}${unit}`;
   }
 
+  _asArray(value) {
+    if (value === undefined || value === null) return [];
+    return Array.isArray(value) ? value : [value];
+  }
+
+  _isPlaceholderReading(probe, raw) {
+    if (!Number.isFinite(raw)) return false;
+    const values = [
+      ...this._asArray(this.config.placeholder_values),
+      ...this._asArray(probe.placeholder_values),
+      ...this._asArray(probe.placeholder_value),
+    ];
+
+    return values.some((value) => {
+      const numeric = Number.parseFloat(value);
+      return Number.isFinite(numeric) && Math.abs(raw - numeric) < 0.05;
+    });
+  }
+
   _probeData(probe, index) {
     const rawState = this._state(probe.entity);
     const raw = Number.parseFloat(rawState?.state);
     const offset = this._num(probe.offset_entity, Number.parseFloat(probe.offset || 0) || 0);
-    const adjusted = Number.isFinite(raw) ? raw + offset : Number.NaN;
+    const placeholder = this._isPlaceholderReading(probe, raw);
+    const adjusted = Number.isFinite(raw) && !placeholder ? raw + offset : Number.NaN;
     const target = this._num(probe.target_entity, Number.parseFloat(probe.target || 0) || 0);
     const unit = rawState?.attributes?.unit_of_measurement || this.config.unit;
     const remaining = Number.isFinite(adjusted) && target > 0 ? target - adjusted : Number.NaN;
@@ -87,11 +107,13 @@ class HaBbqProbeCard extends HTMLElement {
       unit,
       progress,
       remaining,
-      unavailable: !rawState || ["unknown", "unavailable", "none"].includes(String(rawState.state).toLowerCase()),
+      placeholder,
+      unavailable: placeholder || !rawState || ["unknown", "unavailable", "none"].includes(String(rawState.state).toLowerCase()),
     };
   }
 
   _statusLabel(data) {
+    if (data.placeholder) return "not inserted";
     if (data.unavailable) return "offline";
     if (data.target <= 0) return "monitoring";
     if (data.remaining <= 0) return "ready";
@@ -376,7 +398,7 @@ class HaBbqProbeCard extends HTMLElement {
                   </div>
                   <div class="meta">
                     Target ${probe.target > 0 ? this._displayTemp(probe.target, probe.unit) : "off"}
-                    ${this.config.show_raw_temperature ? ` · Raw ${this._displayTemp(probe.raw, probe.unit)}` : ""}
+                    ${this.config.show_raw_temperature ? ` · Raw ${probe.placeholder ? "null" : this._displayTemp(probe.raw, probe.unit)}` : ""}
                     · Offset ${probe.offset > 0 ? "+" : ""}${probe.offset}${probe.unit}
                   </div>
                   <div class="bar"><div class="fill" style="--progress:${probe.progress}%"></div></div>

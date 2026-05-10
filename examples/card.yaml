@@ -13,7 +13,9 @@ probes:
     entity: sensor.ibbq_7f50_temperature_probe_3
     target_entity: input_number.bbq_probe_3_target_temp
     offset_entity: input_number.bbq_probe_3_offset
+    placeholder_value: 32
   - name: Probe 4
     entity: sensor.ibbq_7f50_temperature_probe_4
     target_entity: input_number.bbq_probe_4_target_temp
     offset_entity: input_number.bbq_probe_4_offset
+    placeholder_value: 32

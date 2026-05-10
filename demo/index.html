@@ -32,8 +32,8 @@
       const states = {
         "sensor.ibbq_7f50_temperature_probe_1": { state: "116", attributes: { friendly_name: "Brisket flat", unit_of_measurement: "°F" } },
         "sensor.ibbq_7f50_temperature_probe_2": { state: "36", attributes: { friendly_name: "Ice bath test", unit_of_measurement: "°F" } },
-        "sensor.ibbq_7f50_temperature_probe_3": { state: "151", attributes: { friendly_name: "Pork shoulder", unit_of_measurement: "°F" } },
-        "sensor.ibbq_7f50_temperature_probe_4": { state: "unavailable", attributes: { friendly_name: "Probe 4", unit_of_measurement: "°F" } },
+        "sensor.ibbq_7f50_temperature_probe_3": { state: "32", attributes: { friendly_name: "Unused probe", unit_of_measurement: "°F" } },
+        "sensor.ibbq_7f50_temperature_probe_4": { state: "32", attributes: { friendly_name: "Unused probe", unit_of_measurement: "°F" } },
         "input_number.bbq_probe_1_target_temp": { state: "203", attributes: { unit_of_measurement: "°F" } },
         "input_number.bbq_probe_2_target_temp": { state: "32", attributes: { unit_of_measurement: "°F" } },
         "input_number.bbq_probe_3_target_temp": { state: "165", attributes: { unit_of_measurement: "°F" } },
@@ -52,8 +52,8 @@
         probes: [
           { name: "Probe 1", entity: "sensor.ibbq_7f50_temperature_probe_1", target_entity: "input_number.bbq_probe_1_target_temp", offset_entity: "input_number.bbq_probe_1_offset" },
           { name: "Probe 2", entity: "sensor.ibbq_7f50_temperature_probe_2", target_entity: "input_number.bbq_probe_2_target_temp", offset_entity: "input_number.bbq_probe_2_offset" },
-          { name: "Probe 3", entity: "sensor.ibbq_7f50_temperature_probe_3", target_entity: "input_number.bbq_probe_3_target_temp", offset_entity: "input_number.bbq_probe_3_offset" },
-          { name: "Probe 4", entity: "sensor.ibbq_7f50_temperature_probe_4", target_entity: "input_number.bbq_probe_4_target_temp", offset_entity: "input_number.bbq_probe_4_offset" },
+          { name: "Probe 3", entity: "sensor.ibbq_7f50_temperature_probe_3", target_entity: "input_number.bbq_probe_3_target_temp", offset_entity: "input_number.bbq_probe_3_offset", placeholder_value: 32 },
+          { name: "Probe 4", entity: "sensor.ibbq_7f50_temperature_probe_4", target_entity: "input_number.bbq_probe_4_target_temp", offset_entity: "input_number.bbq_probe_4_offset", placeholder_value: 32 },
         ],
         });
 

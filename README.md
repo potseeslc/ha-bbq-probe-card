@@ -113,6 +113,21 @@ probes:
 
 If your Inkbird entity IDs differ, replace the `entity:` values with your own probe sensor IDs. Keep the helper entity IDs aligned with the helper YAML unless you intentionally rename them.
 
+## Placeholder Readings
+
+Some Inkbird probes report `32°F` when a probe is not inserted. Add `placeholder_value: 32` to any probe that should render that reading as empty/null instead of a real temperature:
+
+```yaml
+probes:
+  - name: Probe 3
+    entity: sensor.ibbq_7f50_temperature_probe_3
+    target_entity: input_number.bbq_probe_3_target_temp
+    offset_entity: input_number.bbq_probe_3_offset
+    placeholder_value: 32
+```
+
+This is per-probe on purpose. If probe 2 is in an ice bath, leave `placeholder_value` off probe 2 so `32°F` still displays as a real reading.
+
 ## Ice Bath Calibration
 
 If probe 2 reads `36°F` in an ice bath, set `input_number.bbq_probe_2_offset` to `-4`. The card will display the adjusted probe value as `32°F` while still showing the raw reading when `show_raw_temperature` is enabled.
