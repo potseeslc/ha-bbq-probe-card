@@ -26,6 +26,8 @@ class HaBbqProbeCard extends HTMLElement {
       offset_step: 0.5,
       show_raw_temperature: true,
       auto_placeholder_value: 32,
+      cycle_seconds: 8,
+      default_collapsed: false,
       ...config,
     };
 
@@ -33,6 +35,9 @@ class HaBbqProbeCard extends HTMLElement {
       this.attachShadow({ mode: "open" });
     }
     this._targetTimers = this._targetTimers || new Map();
+    this._cycleIndex = this._cycleIndex || 0;
+    this._detailsOpen = this._detailsOpen ?? !this.config.default_collapsed;
+    this._startCycleTimer();
     this._render();
   }
 
@@ -42,7 +47,11 @@ class HaBbqProbeCard extends HTMLElement {
   }
 
   getCardSize() {
-    return 5;
+    return this._detailsOpen ? 5 : 2;
+  }
+
+  disconnectedCallback() {
+    window.clearInterval(this._cycleTimer);
   }
 
   _state(entityId) {
@@ -179,12 +188,29 @@ class HaBbqProbeCard extends HTMLElement {
     return Math.max(min, Math.min(max, probe.target));
   }
 
+  _startCycleTimer() {
+    const seconds = Number.parseFloat(this.config.cycle_seconds);
+    const interval = Number.isFinite(seconds) ? Math.max(3, seconds) * 1000 : 8000;
+    window.clearInterval(this._cycleTimer);
+    this._cycleTimer = window.setInterval(() => {
+      this._cycleIndex += 1;
+      this._render();
+    }, interval);
+  }
+
+  _cycleCandidates(probes) {
+    const available = probes.filter((probe) => !probe.unavailable);
+    return available.length > 0 ? available : probes;
+  }
+
   _render() {
     if (!this.shadowRoot || !this.config) return;
 
     const probes = this.config.probes.map((probe, index) => this._probeData(probe, index));
-    const active = probes.find((probe) => !probe.unavailable) || probes[0];
+    const candidates = this._cycleCandidates(probes);
+    const active = candidates[this._cycleIndex % candidates.length] || probes[0];
     const heroUnit = active?.unit || this.config.unit;
+    const detailsLabel = this._detailsOpen ? "Hide details" : "Show details";
 
     this.shadowRoot.innerHTML = `
       <style>
@@ -221,6 +247,21 @@ class HaBbqProbeCard extends HTMLElement {
           gap: 16px;
           align-items: center;
           margin-bottom: 18px;
+        }
+
+        .hero-actions {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-top: 12px;
+          flex-wrap: wrap;
+        }
+
+        .cycle-pill {
+          color: var(--bbq-muted);
+          font-size: 11px;
+          font-weight: 800;
+          text-transform: uppercase;
         }
 
         .eyebrow {
@@ -387,6 +428,14 @@ class HaBbqProbeCard extends HTMLElement {
           background: rgba(255, 255, 255, .14);
         }
 
+        .details-toggle {
+          width: auto;
+          min-width: 96px;
+          padding: 0 10px;
+          font-size: 12px;
+          font-weight: 800;
+        }
+
         .control-label {
           color: var(--bbq-muted);
           font-size: 11px;
@@ -437,13 +486,17 @@ class HaBbqProbeCard extends HTMLElement {
                 <div class="temp">${this._displayTemp(active?.adjusted, heroUnit)}</div>
                 <div class="status">${active ? `${active.name} ${this._statusLabel(active)}` : "waiting for probes"}</div>
               </div>
+              <div class="hero-actions">
+                <button type="button" class="details-toggle" data-action="toggle-details">${detailsLabel}</button>
+                <div class="cycle-pill">${candidates.length > 1 ? `Cycling ${candidates.length} probes` : "Single probe"}</div>
+              </div>
             </div>
             <div class="device" aria-hidden="true">
               <div class="screen">${this._displayTemp(active?.adjusted, heroUnit)}</div>
             </div>
           </section>
 
-          <section class="probe-list">
+          ${this._detailsOpen ? `<section class="probe-list">
             ${probes.map((probe) => `
               <article class="probe ${probe.unavailable ? "offline" : ""}">
                 <div>
@@ -490,7 +543,7 @@ class HaBbqProbeCard extends HTMLElement {
             ${(this.config.presets || [120, 145, 165, 203]).map((temp) => `
               <button type="button" class="preset" data-action="preset" data-temp="${temp}">${temp}${this.config.unit}</button>
             `).join("")}
-          </div>
+          </div>` : ""}
         </div>
       </ha-card>
     `;
@@ -500,7 +553,10 @@ class HaBbqProbeCard extends HTMLElement {
         const action = event.currentTarget.dataset.action;
         const index = Number.parseInt(event.currentTarget.dataset.index || "-1", 10);
         const probe = probes[index];
-        if (action === "preset") {
+        if (action === "toggle-details") {
+          this._detailsOpen = !this._detailsOpen;
+          this._render();
+        } else if (action === "preset") {
           this._targetPreset(Number.parseFloat(event.currentTarget.dataset.temp));
         } else if (probe && action === "target-off") {
           this._callSetValue(probe.targetEntity, 0);

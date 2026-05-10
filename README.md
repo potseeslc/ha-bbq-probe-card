@@ -6,6 +6,8 @@ The card reads live probe sensors, applies per-probe calibration offsets, and co
 
 Target temperatures are set with sliders and quick presets. Probe offsets use small +/- controls for calibration nudges.
 
+The header cycles through active probes for quick glance status. Use **Show details** / **Hide details** to expand or collapse target and offset controls.
+
 ## What HACS Installs
 
 HACS installs the dashboard card JavaScript only. Home Assistant helpers are part of your Home Assistant configuration, so you still need to add the `input_number` helpers from [examples/helpers.yaml](examples/helpers.yaml).
@@ -121,6 +123,8 @@ Optional card-level target range:
 min_target: 80
 max_target: 250
 target_step: 1
+cycle_seconds: 8
+default_collapsed: false
 ```
 
 You can also override `min_target` and `max_target` on an individual probe.
