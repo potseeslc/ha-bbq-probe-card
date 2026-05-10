@@ -25,6 +25,7 @@ class HaBbqProbeCard extends HTMLElement {
       target_step: 1,
       offset_step: 0.5,
       show_raw_temperature: true,
+      auto_placeholder_value: 32,
       ...config,
     };
 
@@ -67,7 +68,7 @@ class HaBbqProbeCard extends HTMLElement {
     return Array.isArray(value) ? value : [value];
   }
 
-  _isPlaceholderReading(probe, raw) {
+  _isPlaceholderReading(probe, raw, target, offset) {
     if (!Number.isFinite(raw)) return false;
     const values = [
       ...this._asArray(this.config.placeholder_values),
@@ -75,19 +76,31 @@ class HaBbqProbeCard extends HTMLElement {
       ...this._asArray(probe.placeholder_value),
     ];
 
-    return values.some((value) => {
+    const explicitMatch = values.some((value) => {
       const numeric = Number.parseFloat(value);
       return Number.isFinite(numeric) && Math.abs(raw - numeric) < 0.05;
     });
+
+    if (explicitMatch) return true;
+    if (probe.placeholder_value === false || this.config.auto_placeholder_value === false) return false;
+
+    const autoValue = Number.parseFloat(
+      probe.auto_placeholder_value ?? this.config.auto_placeholder_value,
+    );
+
+    return Number.isFinite(autoValue)
+      && Math.abs(raw - autoValue) < 0.05
+      && target <= 0
+      && offset === 0;
   }
 
   _probeData(probe, index) {
     const rawState = this._state(probe.entity);
     const raw = Number.parseFloat(rawState?.state);
     const offset = this._num(probe.offset_entity, Number.parseFloat(probe.offset || 0) || 0);
-    const placeholder = this._isPlaceholderReading(probe, raw);
-    const adjusted = Number.isFinite(raw) && !placeholder ? raw + offset : Number.NaN;
     const target = this._num(probe.target_entity, Number.parseFloat(probe.target || 0) || 0);
+    const placeholder = this._isPlaceholderReading(probe, raw, target, offset);
+    const adjusted = Number.isFinite(raw) && !placeholder ? raw + offset : Number.NaN;
     const unit = rawState?.attributes?.unit_of_measurement || this.config.unit;
     const remaining = Number.isFinite(adjusted) && target > 0 ? target - adjusted : Number.NaN;
     const progress = target > 0 && Number.isFinite(adjusted)
