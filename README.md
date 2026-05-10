@@ -4,6 +4,8 @@ A Lovelace custom card for an Inkbird IBT-4XS or similar four-probe BBQ thermome
 
 The card reads live probe sensors, applies per-probe calibration offsets, and controls per-probe target temperatures through Home Assistant `input_number` helpers.
 
+Target temperatures are set with sliders and quick presets. Probe offsets use small +/- controls for calibration nudges.
+
 ## What HACS Installs
 
 HACS installs the dashboard card JavaScript only. Home Assistant helpers are part of your Home Assistant configuration, so you still need to add the `input_number` helpers from [examples/helpers.yaml](examples/helpers.yaml).
@@ -112,6 +114,16 @@ probes:
 ```
 
 If your Inkbird entity IDs differ, replace the `entity:` values with your own probe sensor IDs. Keep the helper entity IDs aligned with the helper YAML unless you intentionally rename them.
+
+Optional card-level target range:
+
+```yaml
+min_target: 80
+max_target: 250
+target_step: 1
+```
+
+You can also override `min_target` and `max_target` on an individual probe.
 
 ## Placeholder Readings
 

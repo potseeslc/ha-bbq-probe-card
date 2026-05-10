@@ -32,6 +32,7 @@ class HaBbqProbeCard extends HTMLElement {
     if (!this.shadowRoot) {
       this.attachShadow({ mode: "open" });
     }
+    this._targetTimers = this._targetTimers || new Map();
     this._render();
   }
 
@@ -150,6 +151,32 @@ class HaBbqProbeCard extends HTMLElement {
     this.config.probes.forEach((probe) => {
       if (probe.target_entity) this._callSetValue(probe.target_entity, temp);
     });
+  }
+
+  _queueTargetValue(probe, value) {
+    if (!probe?.targetEntity || !Number.isFinite(value)) return;
+    window.clearTimeout(this._targetTimers.get(probe.targetEntity));
+    this._targetTimers.set(
+      probe.targetEntity,
+      window.setTimeout(() => this._callSetValue(probe.targetEntity, value), 180),
+    );
+  }
+
+  _targetMin(probe) {
+    return Number.parseFloat(probe.min_target ?? this.config.min_target);
+  }
+
+  _targetMax(probe) {
+    return Number.parseFloat(probe.max_target ?? this.config.max_target);
+  }
+
+  _sliderTargetValue(probe) {
+    const min = this._targetMin(probe);
+    const max = this._targetMax(probe);
+    const fallback = Math.max(min, Math.min(max, 165));
+
+    if (!Number.isFinite(probe.target) || probe.target <= 0) return fallback;
+    return Math.max(min, Math.min(max, probe.target));
   }
 
   _render() {
@@ -315,7 +342,7 @@ class HaBbqProbeCard extends HTMLElement {
         .controls {
           display: grid;
           gap: 8px;
-          min-width: 158px;
+          min-width: 220px;
         }
 
         .control {
@@ -323,6 +350,19 @@ class HaBbqProbeCard extends HTMLElement {
           grid-template-columns: 26px minmax(48px, 1fr) 26px;
           align-items: center;
           gap: 6px;
+        }
+
+        .target-control {
+          display: grid;
+          grid-template-columns: minmax(118px, 1fr) 44px 26px;
+          align-items: center;
+          gap: 8px;
+        }
+
+        input[type="range"] {
+          width: 100%;
+          min-width: 118px;
+          accent-color: var(--bbq-gold);
         }
 
         button {
@@ -417,10 +457,19 @@ class HaBbqProbeCard extends HTMLElement {
                   <div class="bar"><div class="fill" style="--progress:${probe.progress}%"></div></div>
                 </div>
                 <div class="controls">
-                  <div class="control">
-                    <button type="button" data-action="target-down" data-index="${probe.index}" title="Lower target">−</button>
-                    <div class="control-label">Target ${probe.target || "off"}</div>
-                    <button type="button" data-action="target-up" data-index="${probe.index}" title="Raise target">+</button>
+                  <div class="target-control">
+                    <input
+                      type="range"
+                      min="${this._targetMin(probe)}"
+                      max="${this._targetMax(probe)}"
+                      step="${this.config.target_step}"
+                      value="${this._sliderTargetValue(probe)}"
+                      data-action="target-slider"
+                      data-index="${probe.index}"
+                      title="Set target"
+                    >
+                    <div class="control-label">Target ${probe.target > 0 ? Math.round(probe.target) : "off"}</div>
+                    <button type="button" data-action="target-off" data-index="${probe.index}" title="Turn target off">×</button>
                   </div>
                   <div class="control">
                     <button type="button" data-action="offset-down" data-index="${probe.index}" title="Lower offset">−</button>
@@ -448,15 +497,29 @@ class HaBbqProbeCard extends HTMLElement {
         const probe = probes[index];
         if (action === "preset") {
           this._targetPreset(Number.parseFloat(event.currentTarget.dataset.temp));
-        } else if (probe && action === "target-down") {
-          this._adjust(probe.targetEntity, probe.target, -this.config.target_step);
-        } else if (probe && action === "target-up") {
-          this._adjust(probe.targetEntity, probe.target, this.config.target_step);
+        } else if (probe && action === "target-off") {
+          this._callSetValue(probe.targetEntity, 0);
         } else if (probe && action === "offset-down") {
           this._adjust(probe.offsetEntity, probe.offset, -this.config.offset_step);
         } else if (probe && action === "offset-up") {
           this._adjust(probe.offsetEntity, probe.offset, this.config.offset_step);
         }
+      });
+    });
+
+    this.shadowRoot.querySelectorAll('input[data-action="target-slider"]').forEach((input) => {
+      input.addEventListener("input", (event) => {
+        const index = Number.parseInt(event.currentTarget.dataset.index || "-1", 10);
+        const probe = probes[index];
+        const value = Number.parseFloat(event.currentTarget.value);
+        if (probe) this._queueTargetValue(probe, value);
+      });
+
+      input.addEventListener("change", (event) => {
+        const index = Number.parseInt(event.currentTarget.dataset.index || "-1", 10);
+        const probe = probes[index];
+        const value = Number.parseFloat(event.currentTarget.value);
+        if (probe) this._callSetValue(probe.targetEntity, value);
       });
     });
   }
