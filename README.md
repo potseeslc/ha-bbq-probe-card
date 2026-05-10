@@ -21,6 +21,28 @@ The old setup uses one shared helper, `input_number.bbq_target_temp`, and automa
 
 ## Install
 
+### HACS Custom Repository
+
+Add this as a HACS custom repository:
+
+```text
+https://github.com/potseeslc/ha-bbq-probe-card
+```
+
+Use category **Dashboard**. HACS calls dashboard cards "plugin" repositories internally, so this repo ships one dashboard plugin file:
+
+```text
+dist/ha-bbq-probe-card.js
+```
+
+After installing through HACS, add the card to a dashboard with:
+
+```yaml
+type: custom:ha-bbq-probe-card
+```
+
+### Manual Install
+
 Copy `dist/ha-bbq-probe-card.js` into Home Assistant, for example:
 
 ```text
