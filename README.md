@@ -4,6 +4,10 @@ A Lovelace custom card for an Inkbird IBT-4XS or similar four-probe BBQ thermome
 
 The card reads live probe sensors, applies per-probe calibration offsets, and controls per-probe target temperatures through Home Assistant `input_number` helpers.
 
+## What HACS Installs
+
+HACS installs the dashboard card JavaScript only. Home Assistant helpers are part of your Home Assistant configuration, so you still need to add the `input_number` helpers from [examples/helpers.yaml](examples/helpers.yaml).
+
 ## Current Home Assistant Context
 
 From the local Home Assistant config checkout, the existing thermometer entities are:
@@ -35,7 +39,13 @@ Use category **Dashboard**. HACS calls dashboard cards "plugin" repositories int
 dist/ha-bbq-probe-card.js
 ```
 
-After installing through HACS, add the card to a dashboard with:
+After installing through HACS:
+
+1. Add the helper YAML from [examples/helpers.yaml](examples/helpers.yaml) to `configuration.yaml`, or merge the keys under your existing `input_number:` section.
+2. Restart Home Assistant, or reload the `input_number` integration if your setup supports it.
+3. Add the card config from [examples/card.yaml](examples/card.yaml) to a dashboard.
+
+Minimal card config:
 
 ```yaml
 type: custom:ha-bbq-probe-card
@@ -58,6 +68,8 @@ type: module
 
 ## Helper YAML
 
+See [examples/helpers.yaml](examples/helpers.yaml) for the complete helper configuration.
+
 ```yaml
 input_number:
   bbq_probe_1_target_temp:
@@ -65,60 +77,25 @@ input_number:
     min: 0
     max: 250
     step: 1
+    mode: box
     unit_of_measurement: °F
     icon: mdi:target
+    initial: 0
   bbq_probe_2_target_temp:
     name: BBQ Probe 2 Target Temp
     min: 0
     max: 250
     step: 1
+    mode: box
     unit_of_measurement: °F
     icon: mdi:target
-  bbq_probe_3_target_temp:
-    name: BBQ Probe 3 Target Temp
-    min: 0
-    max: 250
-    step: 1
-    unit_of_measurement: °F
-    icon: mdi:target
-  bbq_probe_4_target_temp:
-    name: BBQ Probe 4 Target Temp
-    min: 0
-    max: 250
-    step: 1
-    unit_of_measurement: °F
-    icon: mdi:target
-  bbq_probe_1_offset:
-    name: BBQ Probe 1 Offset
-    min: -20
-    max: 20
-    step: 0.5
-    unit_of_measurement: °F
-    icon: mdi:tune-variant
-  bbq_probe_2_offset:
-    name: BBQ Probe 2 Offset
-    min: -20
-    max: 20
-    step: 0.5
-    unit_of_measurement: °F
-    icon: mdi:tune-variant
-  bbq_probe_3_offset:
-    name: BBQ Probe 3 Offset
-    min: -20
-    max: 20
-    step: 0.5
-    unit_of_measurement: °F
-    icon: mdi:tune-variant
-  bbq_probe_4_offset:
-    name: BBQ Probe 4 Offset
-    min: -20
-    max: 20
-    step: 0.5
-    unit_of_measurement: °F
-    icon: mdi:tune-variant
+    initial: 0
+  # Continue with probes 3-4 and offset helpers from examples/helpers.yaml.
 ```
 
 ## Card Config
+
+See [examples/card.yaml](examples/card.yaml) for a complete four-probe card config.
 
 ```yaml
 type: custom:ha-bbq-probe-card
@@ -132,15 +109,9 @@ probes:
     entity: sensor.ibbq_7f50_temperature_probe_2
     target_entity: input_number.bbq_probe_2_target_temp
     offset_entity: input_number.bbq_probe_2_offset
-  - name: Probe 3
-    entity: sensor.ibbq_7f50_temperature_probe_3
-    target_entity: input_number.bbq_probe_3_target_temp
-    offset_entity: input_number.bbq_probe_3_offset
-  - name: Probe 4
-    entity: sensor.ibbq_7f50_temperature_probe_4
-    target_entity: input_number.bbq_probe_4_target_temp
-    offset_entity: input_number.bbq_probe_4_offset
 ```
+
+If your Inkbird entity IDs differ, replace the `entity:` values with your own probe sensor IDs. Keep the helper entity IDs aligned with the helper YAML unless you intentionally rename them.
 
 ## Ice Bath Calibration
 
