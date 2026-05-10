@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>HA BBQ Probe Card Demo</title>
+    <script type="module" src="../dist/ha-bbq-probe-card.js"></script>
+    <style>
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background: #23251f;
+        font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      main {
+        width: min(720px, calc(100vw - 28px));
+      }
+
+      ha-card {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <ha-bbq-probe-card></ha-bbq-probe-card>
+    </main>
+    <script>
+      const states = {
+        "sensor.ibbq_7f50_temperature_probe_1": { state: "116", attributes: { friendly_name: "Brisket flat", unit_of_measurement: "°F" } },
+        "sensor.ibbq_7f50_temperature_probe_2": { state: "36", attributes: { friendly_name: "Ice bath test", unit_of_measurement: "°F" } },
+        "sensor.ibbq_7f50_temperature_probe_3": { state: "151", attributes: { friendly_name: "Pork shoulder", unit_of_measurement: "°F" } },
+        "sensor.ibbq_7f50_temperature_probe_4": { state: "unavailable", attributes: { friendly_name: "Probe 4", unit_of_measurement: "°F" } },
+        "input_number.bbq_probe_1_target_temp": { state: "203", attributes: { unit_of_measurement: "°F" } },
+        "input_number.bbq_probe_2_target_temp": { state: "32", attributes: { unit_of_measurement: "°F" } },
+        "input_number.bbq_probe_3_target_temp": { state: "165", attributes: { unit_of_measurement: "°F" } },
+        "input_number.bbq_probe_4_target_temp": { state: "0", attributes: { unit_of_measurement: "°F" } },
+        "input_number.bbq_probe_1_offset": { state: "0", attributes: { unit_of_measurement: "°F" } },
+        "input_number.bbq_probe_2_offset": { state: "-4", attributes: { unit_of_measurement: "°F" } },
+        "input_number.bbq_probe_3_offset": { state: "1.5", attributes: { unit_of_measurement: "°F" } },
+        "input_number.bbq_probe_4_offset": { state: "0", attributes: { unit_of_measurement: "°F" } },
+      };
+
+      customElements.whenDefined("ha-bbq-probe-card").then(() => {
+        const card = document.querySelector("ha-bbq-probe-card");
+
+        card.setConfig({
+        title: "Smoke Session",
+        probes: [
+          { name: "Probe 1", entity: "sensor.ibbq_7f50_temperature_probe_1", target_entity: "input_number.bbq_probe_1_target_temp", offset_entity: "input_number.bbq_probe_1_offset" },
+          { name: "Probe 2", entity: "sensor.ibbq_7f50_temperature_probe_2", target_entity: "input_number.bbq_probe_2_target_temp", offset_entity: "input_number.bbq_probe_2_offset" },
+          { name: "Probe 3", entity: "sensor.ibbq_7f50_temperature_probe_3", target_entity: "input_number.bbq_probe_3_target_temp", offset_entity: "input_number.bbq_probe_3_offset" },
+          { name: "Probe 4", entity: "sensor.ibbq_7f50_temperature_probe_4", target_entity: "input_number.bbq_probe_4_target_temp", offset_entity: "input_number.bbq_probe_4_offset" },
+        ],
+        });
+
+        card.hass = {
+          states,
+          callService(domain, service, data) {
+            if (domain !== "input_number" || service !== "set_value") return;
+            states[data.entity_id] = states[data.entity_id] || { attributes: { unit_of_measurement: "°F" } };
+            states[data.entity_id].state = String(data.value);
+            card.hass = this;
+          },
+        };
+      });
+    </script>
+  </body>
+</html>
