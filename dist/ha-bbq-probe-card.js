@@ -287,12 +287,13 @@ class HaBbqProbeCard extends HTMLElement {
 
         .probe {
           display: grid;
-          grid-template-columns: 1fr auto;
-          gap: 12px;
+          grid-template-columns: minmax(0, 1fr);
+          gap: 10px;
           padding: 12px;
           border: 1px solid rgba(255, 255, 255, .09);
           border-radius: 8px;
           background: rgba(255, 255, 255, .045);
+          min-width: 0;
         }
 
         .probe.offline {
@@ -341,8 +342,8 @@ class HaBbqProbeCard extends HTMLElement {
 
         .controls {
           display: grid;
-          gap: 8px;
-          min-width: 220px;
+          gap: 10px;
+          min-width: 0;
         }
 
         .control {
@@ -354,15 +355,19 @@ class HaBbqProbeCard extends HTMLElement {
 
         .target-control {
           display: grid;
-          grid-template-columns: minmax(118px, 1fr) 44px 26px;
+          grid-template-columns: minmax(0, 1fr) 58px 26px;
           align-items: center;
           gap: 8px;
         }
 
         input[type="range"] {
           width: 100%;
-          min-width: 118px;
+          min-width: 0;
           accent-color: var(--bbq-gold);
+        }
+
+        .offset-control {
+          max-width: 210px;
         }
 
         button {
@@ -471,7 +476,7 @@ class HaBbqProbeCard extends HTMLElement {
                     <div class="control-label">Target ${probe.target > 0 ? Math.round(probe.target) : "off"}</div>
                     <button type="button" data-action="target-off" data-index="${probe.index}" title="Turn target off">×</button>
                   </div>
-                  <div class="control">
+                  <div class="control offset-control">
                     <button type="button" data-action="offset-down" data-index="${probe.index}" title="Lower offset">−</button>
                     <div class="control-label">Offset ${probe.offset > 0 ? "+" : ""}${probe.offset}</div>
                     <button type="button" data-action="offset-up" data-index="${probe.index}" title="Raise offset">+</button>
