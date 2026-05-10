@@ -4,7 +4,7 @@ A Lovelace custom card for an Inkbird IBT-4XS or similar four-probe BBQ thermome
 
 The card reads live probe sensors, applies per-probe calibration offsets, and controls per-probe target temperatures through Home Assistant `input_number` helpers.
 
-Target temperatures are set with sliders and quick presets. Probe offsets use small +/- controls for calibration nudges.
+Target temperatures are set with sliders, editable number fields, and quick presets. Probe offsets use small +/- controls for calibration nudges.
 
 The header cycles through active probes for quick glance status. Use **Show details** / **Hide details** to expand or collapse target and offset controls.
 

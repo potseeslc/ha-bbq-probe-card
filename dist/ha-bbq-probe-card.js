@@ -396,7 +396,7 @@ class HaBbqProbeCard extends HTMLElement {
 
         .target-control {
           display: grid;
-          grid-template-columns: minmax(0, 1fr) 58px 26px;
+          grid-template-columns: minmax(0, 1fr) 64px 26px;
           align-items: center;
           gap: 8px;
         }
@@ -405,6 +405,25 @@ class HaBbqProbeCard extends HTMLElement {
           width: 100%;
           min-width: 0;
           accent-color: var(--bbq-gold);
+        }
+
+        .target-input {
+          width: 64px;
+          height: 26px;
+          box-sizing: border-box;
+          border: 1px solid rgba(255, 255, 255, .14);
+          border-radius: 6px;
+          background: rgba(255, 255, 255, .08);
+          color: var(--bbq-ink);
+          font-size: 12px;
+          font-weight: 800;
+          text-align: center;
+          font-variant-numeric: tabular-nums;
+        }
+
+        .target-input::placeholder {
+          color: var(--bbq-muted);
+          opacity: 1;
         }
 
         .offset-control {
@@ -526,7 +545,18 @@ class HaBbqProbeCard extends HTMLElement {
                       data-index="${probe.index}"
                       title="Set target"
                     >
-                    <div class="control-label">Target ${probe.target > 0 ? Math.round(probe.target) : "off"}</div>
+                    <input
+                      class="target-input"
+                      type="number"
+                      min="${this._targetMin(probe)}"
+                      max="${this._targetMax(probe)}"
+                      step="${this.config.target_step}"
+                      value="${probe.target > 0 ? Math.round(probe.target) : ""}"
+                      placeholder="off"
+                      data-action="target-input"
+                      data-index="${probe.index}"
+                      title="Type target"
+                    >
                     <button type="button" data-action="target-off" data-index="${probe.index}" title="Turn target off">×</button>
                   </div>
                   <div class="control offset-control">
@@ -581,6 +611,23 @@ class HaBbqProbeCard extends HTMLElement {
         const probe = probes[index];
         const value = Number.parseFloat(event.currentTarget.value);
         if (probe) this._callSetValue(probe.targetEntity, value);
+      });
+    });
+
+    this.shadowRoot.querySelectorAll('input[data-action="target-input"]').forEach((input) => {
+      const commit = (event) => {
+        const index = Number.parseInt(event.currentTarget.dataset.index || "-1", 10);
+        const probe = probes[index];
+        const value = Number.parseFloat(event.currentTarget.value);
+        if (probe && Number.isFinite(value)) this._callSetValue(probe.targetEntity, value);
+      };
+
+      input.addEventListener("change", commit);
+      input.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          event.currentTarget.blur();
+          commit(event);
+        }
       });
     });
   }
